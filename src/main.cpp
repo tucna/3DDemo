@@ -16,12 +16,16 @@
 */
 
 using namespace linalg::aliases;
+using namespace std;
 
 namespace g
 {
   constexpr uint32_t screenWidth = 600;
   constexpr uint32_t screenHeight = 380;
 };
+
+using floatT4x4 = std::array<std::array<float, 4>, 4>;
+using floatT4 = std::array<float, 4>;
 
 class MatrixDemo : public tDX::PixelGameEngine
 {
@@ -103,6 +107,24 @@ public:
       { -std::sin(ToRad(m_yaw)), 0, std::cos(ToRad(m_yaw)), 0 },
       { m_cubeTranslationX, 0, m_cubeTranslationZ, 1 }
     };
+
+    m_translationMatrix =
+    {{
+      {{ 1, 0, 0, m_cubeTranslationX }},
+      {{ 0, 1, 0, 0                  }},
+      {{ 0, 0, 1, m_cubeTranslationZ }},
+      {{ 0, 0, 0, 1                  }},
+    }};
+
+    m_rotationMatrix =
+    {{
+      {{ cos(ToRad(m_yaw))     , 0, -std::sin(ToRad(m_yaw)), 0 }},
+      {{ 0                     , 1, 0                      , 0 }},
+      {{ std::sin(ToRad(m_yaw)), 0, std::cos(ToRad(m_yaw)) , 0 }},
+      {{ 0                     , 0, 0                      , 1 }},
+    }};
+
+    floatT4x4 TUCNA = MatMatMul(m_translationMatrix, m_rotationMatrix);
 
     // View matrix, Projection , matrix
     float4x4 testLOOKAT = linalg::identity;
@@ -234,6 +256,32 @@ public:
 private:
   // Utils methods
   float ToRad(float deg) { return deg * (float)M_PI / 180.0f; }
+  float Dot(const floatT4& v1, const floatT4& v2) { return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3]; }
+
+  floatT4x4 MatMatMul(const floatT4x4& m1, const floatT4x4& m2)
+  {
+    floatT4x4 mul;
+
+    const floatT4& row_11 = m1[0];
+    const floatT4& row_21 = m1[1];
+    const floatT4& row_31 = m1[2];
+    const floatT4& row_41 = m1[3];
+
+    const floatT4 col_12 = { m2[0][0], m2[1][0], m2[2][0], m2[3][0] };
+    const floatT4 col_22 = { m2[0][1], m2[1][1], m2[2][1], m2[3][1] };
+    const floatT4 col_32 = { m2[0][2], m2[1][2], m2[2][2], m2[3][2] };
+    const floatT4 col_42 = { m2[0][3], m2[1][3], m2[2][3], m2[3][3] };
+
+    mul =
+    {{
+      {{ Dot(col_12, row_11), Dot(col_22, row_11), Dot(col_32, row_11), Dot(col_42, row_11) }},
+      {{ Dot(col_12, row_21), Dot(col_22, row_21), Dot(col_32, row_21), Dot(col_42, row_21) }},
+      {{ Dot(col_12, row_31), Dot(col_22, row_31), Dot(col_32, row_31), Dot(col_42, row_31) }},
+      {{ Dot(col_12, row_41), Dot(col_22, row_41), Dot(col_32, row_41), Dot(col_42, row_41) }},
+    }};
+
+    return mul;
+  }
 
   // Constants to specify UI
   constexpr static int32_t m_windowWidth = g::screenWidth / 2;
@@ -255,6 +303,10 @@ private:
   float4x4 m_viewMatrixCube;
   float4x4 m_projectionMatrixCube;
   float4x4 m_mvpMatrixCube;
+
+  // New matrices
+  floatT4x4 m_translationMatrix;
+  floatT4x4 m_rotationMatrix;
 
   // Look at
   float3 m_eye = { 0, 0, 0 };
