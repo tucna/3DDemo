@@ -26,6 +26,68 @@ namespace g
 
 using floatT4x4 = std::array<std::array<float, 4>, 4>;
 using floatT4 = std::array<float, 4>;
+using floatT3 = std::array<float, 3>;
+
+// Utils methods
+float toRad(float deg) { return deg * (float)M_PI / 180.0f; }
+float dot(const floatT4& v1, const floatT4& v2) { return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3]; }
+float dot(const floatT3& v1, const floatT3& v2) { return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]; }
+
+floatT3 cross(const floatT3& v1, const floatT3& v2)
+{
+  return { v1[1]*v2[2] - v1[2]*v2[1], v1[2]*v2[0] - v1[0]*v2[2], v1[0]*v2[1] - v1[1]*v2[0] };
+}
+
+floatT3 normalize(const floatT3& v1)
+{
+  float length = std::sqrt(v1[0]*v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
+
+  floatT3 normalized =
+  {
+    v1[0] / length,
+    v1[1] / length,
+    v1[2] / length,
+  };
+
+  return normalized;
+}
+
+// Operator overloading
+floatT3 operator-(const floatT3 &v1) { return { -v1[0], -v1[1], -v1[2] }; }
+floatT3 operator-(const floatT3 &v1, const floatT3 &v2)
+{
+  floatT3 difference =
+  {
+    v1[0] - v2[0],
+    v1[1] - v2[1],
+    v1[2] - v2[2],
+  };
+
+  return difference;
+}
+
+floatT4x4 operator*(const floatT4x4& m1, const floatT4x4& m2)
+{
+  const floatT4& row_11 = m1[0];
+  const floatT4& row_21 = m1[1];
+  const floatT4& row_31 = m1[2];
+  const floatT4& row_41 = m1[3];
+
+  const floatT4 col_12 = { m2[0][0], m2[1][0], m2[2][0], m2[3][0] };
+  const floatT4 col_22 = { m2[0][1], m2[1][1], m2[2][1], m2[3][1] };
+  const floatT4 col_32 = { m2[0][2], m2[1][2], m2[2][2], m2[3][2] };
+  const floatT4 col_42 = { m2[0][3], m2[1][3], m2[2][3], m2[3][3] };
+
+  floatT4x4 mul =
+  {{
+    {{ dot(col_12, row_11), dot(col_22, row_11), dot(col_32, row_11), dot(col_42, row_11) }},
+    {{ dot(col_12, row_21), dot(col_22, row_21), dot(col_32, row_21), dot(col_42, row_21) }},
+    {{ dot(col_12, row_31), dot(col_22, row_31), dot(col_32, row_31), dot(col_42, row_31) }},
+    {{ dot(col_12, row_41), dot(col_22, row_41), dot(col_32, row_41), dot(col_42, row_41) }},
+  }};
+
+  return mul;
+}
 
 class MatrixDemo : public tDX::PixelGameEngine
 {
@@ -51,8 +113,8 @@ public:
     if (GetKey(tDX::A).bHeld) { m_cubeTranslationX -= coeficient; }
     if (GetKey(tDX::W).bHeld) { m_cubeTranslationZ -= coeficient; }
     if (GetKey(tDX::S).bHeld) { m_cubeTranslationZ += coeficient; }
-    if (GetKey(tDX::E).bHeld) { m_yaw += coeficient * 30; }
-    if (GetKey(tDX::Q).bHeld) { m_yaw -= coeficient * 30; }
+    if (GetKey(tDX::E).bHeld) { m_yaw -= coeficient * 30; }
+    if (GetKey(tDX::Q).bHeld) { m_yaw += coeficient * 30; }
 
     m_cubeTranslationZ = std::max(m_cubeTranslationZ, -5.0f);
     m_cubeTranslationZ = std::min(m_cubeTranslationZ, 0.5f);
@@ -83,7 +145,7 @@ public:
     DrawRect(m_originX - 2, m_originY - 10 + 10, 4, 4, tDX::BLUE);
 
     // Draw frustum
-    float fovx = 2 * std::atan(std::tan(ToRad(45.0f * 0.5)) * m_aspectRatio);
+    float fovx = 2 * std::atan(std::tan(toRad(45.0f * 0.5)) * m_aspectRatio);
     float length = (std::tan(fovx/2.0f) * 120);
 
     DrawLine(m_originX, m_originY, m_originX - length, m_originY - 120, tDX::BLUE);
@@ -102,9 +164,9 @@ public:
 
     m_modelMatrixCube =
     {
-      { std::cos(ToRad(m_yaw)), 0, std::sin(ToRad(m_yaw)), 0 },
+      { std::cos(toRad(m_yaw)), 0, std::sin(toRad(m_yaw)), 0 },
       { 0, 1, 0, 0 },
-      { -std::sin(ToRad(m_yaw)), 0, std::cos(ToRad(m_yaw)), 0 },
+      { -std::sin(toRad(m_yaw)), 0, std::cos(toRad(m_yaw)), 0 },
       { m_cubeTranslationX, 0, m_cubeTranslationZ, 1 }
     };
 
@@ -118,17 +180,47 @@ public:
 
     m_rotationMatrix =
     {{
-      {{ cos(ToRad(m_yaw))     , 0, -std::sin(ToRad(m_yaw)), 0 }},
+      {{ cos(toRad(m_yaw))     , 0, -std::sin(toRad(m_yaw)), 0 }},
       {{ 0                     , 1, 0                      , 0 }},
-      {{ std::sin(ToRad(m_yaw)), 0, std::cos(ToRad(m_yaw)) , 0 }},
+      {{ std::sin(toRad(m_yaw)), 0, std::cos(toRad(m_yaw)) , 0 }},
       {{ 0                     , 0, 0                      , 1 }},
     }};
 
-    floatT4x4 TUCNA = MatMatMul(m_translationMatrix, m_rotationMatrix);
+    m_worldMatrix = m_translationMatrix * m_rotationMatrix;
 
     // View matrix, Projection , matrix
-    float4x4 testLOOKAT = linalg::identity;
-    float4x4 testPROJECTION = linalg::perspective_matrix(ToRad(45.0f), m_aspectRatio, 0.1f, 100.0f);
+    floatT3 zaxis = normalize(m_target - m_eye);
+    floatT3 xaxis = normalize(cross(zaxis, m_up));
+    floatT3 yaxis = cross(xaxis, zaxis);
+
+    zaxis = -zaxis;
+
+    m_viewMatrix =
+    {{
+      {{ xaxis[0], xaxis[1], xaxis[2], -dot(xaxis, m_eye) }},
+      {{ yaxis[0], yaxis[1], yaxis[2], -dot(yaxis, m_eye) }},
+      {{ zaxis[0], zaxis[1], zaxis[2], -dot(zaxis, m_eye) }},
+      {{ 0, 0, 0, 1 }}
+    }};
+
+    // Projection
+    float fovY = 45.0f;
+    float n = 0.1f;
+    float f = 100.0f;
+    float tan_fovY = std::tan(toRad(fovY/2.0f));
+
+    m_projectionMatrix =
+    {{
+      {{ 1.0f/(m_aspectRatio*tan_fovY), 0, 0, 0 }},
+      {{ 0, 1.0f / tan_fovY, 0, 0 }},
+      {{ 0, 0, -(f+n)/(f-n), -(2*f*n)/(f-n) }},
+      {{ 0, 0, -1, 0 }}
+    }};
+
+    m_mvpMatrix = m_projectionMatrix * m_viewMatrix * m_worldMatrix;
+
+    float4x4 testLOOKAT = linalg::lookat_matrix(m_eyeT, m_targetT, m_upT); // linalg::identity;
+    float4x4 testPROJECTION = linalg::perspective_matrix(toRad(45.0f), m_aspectRatio, 0.1f, 100.0f);
 
     m_mvpMatrixCube = linalg::mul(testPROJECTION, testLOOKAT, m_modelMatrixCube);
     m_projectionMatrixCube = testPROJECTION;
@@ -154,7 +246,7 @@ public:
       vertex.y = (1.0f - vertex.y) * (m_windowHeight - 1) * 0.5f + m_windowHeight; // plus Y viewport origin
     }
 
-    std::cout << transformedCube[0].x << ", " << transformedCube[0].y << ", " << transformedCube[0].z << ", " << transformedCube[0].w << std::endl;
+    //std::cout << transformedCube[0].x << ", " << transformedCube[0].y << ", " << transformedCube[0].z << ", " << transformedCube[0].w << std::endl;
 
     tDX::vi2d clipWinPos = { 0, m_windowHeight };
     tDX::vi2d clipWinSize = { m_windowWidth - 1, m_windowHeight - 1 };
@@ -254,35 +346,6 @@ public:
   }
 
 private:
-  // Utils methods
-  float ToRad(float deg) { return deg * (float)M_PI / 180.0f; }
-  float Dot(const floatT4& v1, const floatT4& v2) { return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3]; }
-
-  floatT4x4 MatMatMul(const floatT4x4& m1, const floatT4x4& m2)
-  {
-    floatT4x4 mul;
-
-    const floatT4& row_11 = m1[0];
-    const floatT4& row_21 = m1[1];
-    const floatT4& row_31 = m1[2];
-    const floatT4& row_41 = m1[3];
-
-    const floatT4 col_12 = { m2[0][0], m2[1][0], m2[2][0], m2[3][0] };
-    const floatT4 col_22 = { m2[0][1], m2[1][1], m2[2][1], m2[3][1] };
-    const floatT4 col_32 = { m2[0][2], m2[1][2], m2[2][2], m2[3][2] };
-    const floatT4 col_42 = { m2[0][3], m2[1][3], m2[2][3], m2[3][3] };
-
-    mul =
-    {{
-      {{ Dot(col_12, row_11), Dot(col_22, row_11), Dot(col_32, row_11), Dot(col_42, row_11) }},
-      {{ Dot(col_12, row_21), Dot(col_22, row_21), Dot(col_32, row_21), Dot(col_42, row_21) }},
-      {{ Dot(col_12, row_31), Dot(col_22, row_31), Dot(col_32, row_31), Dot(col_42, row_31) }},
-      {{ Dot(col_12, row_41), Dot(col_22, row_41), Dot(col_32, row_41), Dot(col_42, row_41) }},
-    }};
-
-    return mul;
-  }
-
   // Constants to specify UI
   constexpr static int32_t m_windowWidth = g::screenWidth / 2;
   constexpr static int32_t m_windowHeight = g::screenHeight / 2;
@@ -292,6 +355,28 @@ private:
   constexpr static uint8_t m_gridRows = m_windowHeight / m_cellSize + 1;
   constexpr static uint8_t m_gridCols = m_windowWidth / m_cellSize + 1;
   constexpr static float m_aspectRatio = (float)m_windowWidth / (float)m_windowHeight;
+
+  // Model
+  constexpr static std::array<linalg::aliases::float4, 8> m_cube =
+  {{
+    {-0.5, -0.5, -0.5, 1.0},
+    { 0.5, -0.5, -0.5, 1.0},
+    { 0.5,  0.5, -0.5, 1.0},
+    {-0.5,  0.5, -0.5, 1.0},
+    {-0.5, -0.5,  0.5, 1.0},
+    { 0.5, -0.5,  0.5, 1.0},
+    { 0.5,  0.5,  0.5, 1.0},
+    {-0.5,  0.5,  0.5, 1.0}
+  }};
+
+  // Default matrix
+  constexpr static floatT4x4 m_identityMatrix =
+  {{
+    {{ 1, 0, 0, 0 }},
+    {{ 0, 1, 0, 0 }},
+    {{ 0, 0, 1, 0 }},
+    {{ 0, 0, 0, 1 }}
+  }};
 
   // Cube transformations
   float m_cubeTranslationX = 0.0f;
@@ -307,24 +392,23 @@ private:
   // New matrices
   floatT4x4 m_translationMatrix;
   floatT4x4 m_rotationMatrix;
+  floatT4x4 m_worldMatrix;
+
+  floatT4x4 m_viewMatrix;
+  floatT4x4 m_projectionMatrix;
+
+  floatT4x4 m_mvpMatrix;
 
   // Look at
-  float3 m_eye = { 0, 0, 0 };
-  float3 m_target = { 0, 0, -1 };
-  float3 m_up = { 0, 1, 0 };
+  
+  float3 m_eyeT = { 0, 0, 0 };
+  float3 m_targetT = { 0, 0, -1 };
+  float3 m_upT = { 0, 1, 0 };
+  
 
-  // Cube
-  std::array<linalg::aliases::float4, 8> m_cube =
-  {{
-    {-0.5, -0.5, -0.5, 1.0},
-    { 0.5, -0.5, -0.5, 1.0},
-    { 0.5,  0.5, -0.5, 1.0},
-    {-0.5,  0.5, -0.5, 1.0},
-    {-0.5, -0.5,  0.5, 1.0},
-    { 0.5, -0.5,  0.5, 1.0},
-    { 0.5,  0.5,  0.5, 1.0},
-    {-0.5,  0.5,  0.5, 1.0}
-  }};
+  floatT3 m_eye = { 0, 0, 0 };
+  floatT3 m_target = { 0, 0, -1 };
+  floatT3 m_up = { 0, 1, 0 };
 };
 
 
