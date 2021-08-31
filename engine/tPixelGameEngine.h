@@ -1300,60 +1300,95 @@ namespace tDX
 
   void PixelGameEngine::DrawLineClipped(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const tDX::vi2d& clipWinPos, const tDX::vi2d& clipWinSize, Pixel p)
   {
-    tDX::vi2d pos1 = { x1, y1 };
-    tDX::vi2d pos2 = { x2, y2 };
+    tDX::vi2d v1 = { x1, y1 };
+    tDX::vi2d v2 = { x2, y2 };
 
-    // Clip
-    if  (
-        (pos1.x < clipWinPos.x && pos2.x < clipWinPos.x) ||
-        (pos1.x > clipWinPos.x + clipWinSize.x && pos2.x > clipWinPos.x + clipWinSize.x) ||
-        (pos1.y < clipWinPos.y && pos2.y < clipWinPos.y) ||
-        (pos1.y > clipWinPos.y + clipWinSize.y && pos2.y > clipWinPos.y + clipWinSize.y)
-        )
-      return;
+    const char inside = 0; // 0000
+    const char left = 1;   // 0001
+    const char right = 2;  // 0010
+    const char bottom = 4; // 0100
+    const char top = 8;    // 1000
 
-    if (pos2.x > clipWinPos.x + clipWinSize.x)
+    int xMax = clipWinPos.x + clipWinSize.x;
+    int xMin = clipWinPos.x;
+
+    int yMax = clipWinPos.y + clipWinSize.y;
+    int yMin = clipWinPos.y;
+
+    auto computeCode = [&](tDX::vi2d v)
     {
-      float alpha = (pos2.x - (clipWinPos.x + clipWinSize.x)) / (float)(pos2.x - pos1.x);
-      pos2.x = clipWinPos.x + clipWinSize.x;
-      pos2.y = pos1.y + ((1 - alpha) * (pos2.y - pos1.y));
-    }
+      char code = inside;
 
-    if (pos2.x < clipWinPos.x)
+      if (v.x < clipWinPos.x)
+        code |= left;
+      else if (v.x > xMax)
+        code |= right;
+      if (v.y < clipWinPos.y)
+        code |= bottom;
+      else if (v.y > yMax)
+        code |= top;
+
+      return code;
+    };
+
+    char code1 = computeCode(v1);
+    char code2 = computeCode(v2);
+
+    while (true)
     {
-      float alpha = (pos2.x - clipWinPos.x) / (float)(pos2.x - pos1.x);
-      pos2.x = clipWinPos.x;
-      pos2.y = pos1.y + ((1 - alpha) * (pos2.y - pos1.y));
-    }
+      if ((code1 == 0) && (code2 == 0)) // both inside
+      {
+        break;
+      }
+      else if (code1 & code2) // both outside
+      {
+        return;
+      }
+      else
+      {
+        float x, y;
+        char codeOut = code1 == 0 ? code2 : code1;
 
-    if (pos2.y > clipWinPos.y + clipWinSize.y)
-    {
-      float alpha = (pos2.y - (clipWinPos.y + clipWinSize.y)) / (float)(pos2.y - pos1.y);
-      pos2.x = pos1.x + ((1 - alpha) * (pos2.x - pos1.x));
-      pos2.y = clipWinPos.y + clipWinSize.y;
-    }
+        // y = y1 + slope * (x - x1),
+        // x = x1 + (1 / slope) * (y - y1)
+        if (codeOut & top) // above
+        {
+          x = x1 + (x2 - x1) * (yMax - y1) / (y2 - y1);
+          y = yMax;
+        }
+        else if (codeOut & bottom) // bellow
+        {
+          x = x1 + (x2 - x1) * (yMin - y1) / (y2 - y1);
+          y = yMin;
+        }
+        else if (codeOut & right) // right
+        {
+          y = y1 + (y2 - y1) * (xMax - x1) / (x2 - x1);
+          x = xMax;
+        }
+        else if (codeOut & left)
+        {
+          // point is to the left of rectangle
+          y = y1 + (y2 - y1) * (xMin - x1) / (x2 - x1);
+          x = xMin;
+        }
 
-    if (pos2.y < clipWinPos.y)
-    {
-      float alpha = (pos2.y - clipWinPos.y) / (float)(pos2.y - pos1.y);
-      pos2.x = pos1.x + ((1 - alpha) * (pos2.x - pos1.x));
-      pos2.y = clipWinPos.y;
-    }
+        if (codeOut == code1)
+        {
+          v1.x = round(x);
+          v1.y = round(y);
+          code1 = computeCode(v1);
+        }
+        else
+        {
+          v2.x = round(x);
+          v2.y = round(y);
+          code2 = computeCode(v2);
+        }
+      }
+    };
 
-    // Handle pos1
-    if (pos1.y == pos2.y)
-    {
-      if (pos1.x < clipWinPos.x) pos1.x = clipWinPos.x;
-      if (pos1.x > clipWinPos.x + clipWinSize.x) pos1.x = clipWinPos.x + clipWinSize.x;
-    }
-    if (pos1.x == pos2.x)
-    {
-      if (pos1.y < clipWinPos.y) pos1.y = clipWinPos.y;
-      if (pos1.y > clipWinPos.y + clipWinSize.y) pos1.y = clipWinPos.y + clipWinSize.y;
-    }
-
-
-    DrawLine(pos1, pos2, p);
+    DrawLine(v1, v2, p);
   }
 
   void PixelGameEngine::DrawLine(const tDX::vi2d& pos1, const tDX::vi2d& pos2, Pixel p, uint32_t pattern)
