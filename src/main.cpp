@@ -2,11 +2,10 @@
 #include <iomanip>
 #include <sstream>
 
-#define _USE_MATH_DEFINES
-#include <cmath>
-
 #define T_PGE_APPLICATION
 #include "engine/tPixelGameEngine.h"
+
+#define PI 3.14159265358979323846f
 
 using namespace std;
 
@@ -16,61 +15,65 @@ namespace g
   constexpr uint32_t screenHeight = 380;
 };
 
-using floatT4x4 = std::array<std::array<float, 4>, 4>;
-using floatT4 = std::array<float, 4>;
-using floatT3 = std::array<float, 3>;
+using float4x4 = std::array<std::array<float, 4>, 4>;
+
+struct float4 { float x, y, z, w; };
+struct float3 { float x, y, z; };
+struct float2 { float x, y; };
 
 // Utils methods
-float toRad(float deg) { return deg * (float)M_PI / 180.0f; }
-float dot(const floatT4& v1, const floatT4& v2) { return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3]; }
-float dot(const floatT3& v1, const floatT3& v2) { return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]; }
+float toRad(float deg) { return deg * PI / 180.0f; }
+float dot(const float4& v1, const float4& v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w; }
+float dot(const float3& v1, const float3& v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z; }
 
-floatT3 cross(const floatT3& v1, const floatT3& v2)
+float3 cross(const float3& v1, const float3& v2)
 {
-  return { v1[1]*v2[2] - v1[2]*v2[1], v1[2]*v2[0] - v1[0]*v2[2], v1[0]*v2[1] - v1[1]*v2[0] };
+  return { v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x };
 }
 
-floatT3 normalize(const floatT3& v1)
+float3 normalize(const float3& v1)
 {
-  float length = std::sqrt(v1[0]*v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
+  float length = std::sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
 
-  floatT3 normalized =
+  float3 normalized =
   {
-    v1[0] / length,
-    v1[1] / length,
-    v1[2] / length,
+    v1.x / length,
+    v1.y / length,
+    v1.z / length,
   };
 
   return normalized;
 }
 
 // Operator overloading
-floatT3 operator-(const floatT3 &v1) { return { -v1[0], -v1[1], -v1[2] }; }
-floatT3 operator-(const floatT3 &v1, const floatT3 &v2)
+
+
+float3 operator-(const float3 &v1) { return { -v1.x, -v1.y, -v1.z }; }
+float3 operator-(const float3 &v1, const float3 &v2)
 {
-  floatT3 difference =
+  float3 difference =
   {
-    v1[0] - v2[0],
-    v1[1] - v2[1],
-    v1[2] - v2[2],
+    v1.x - v2.x,
+    v1.y - v2.y,
+    v1.z - v2.z,
   };
 
   return difference;
 }
 
-floatT4x4 operator*(const floatT4x4& m1, const floatT4x4& m2)
+float4x4 operator*(const float4x4& m1, const float4x4& m2)
 {
-  const floatT4& row_11 = m1[0];
-  const floatT4& row_21 = m1[1];
-  const floatT4& row_31 = m1[2];
-  const floatT4& row_41 = m1[3];
+  const float4 row_11 = { m1[0][0], m1[0][1], m1[0][2], m1[0][3] };
+  const float4 row_21 = { m1[1][0], m1[1][1], m1[1][2], m1[1][3] };
+  const float4 row_31 = { m1[2][0], m1[2][1], m1[2][2], m1[2][3] };
+  const float4 row_41 = { m1[3][0], m1[3][1], m1[3][2], m1[3][3] };
 
-  const floatT4 col_12 = { m2[0][0], m2[1][0], m2[2][0], m2[3][0] };
-  const floatT4 col_22 = { m2[0][1], m2[1][1], m2[2][1], m2[3][1] };
-  const floatT4 col_32 = { m2[0][2], m2[1][2], m2[2][2], m2[3][2] };
-  const floatT4 col_42 = { m2[0][3], m2[1][3], m2[2][3], m2[3][3] };
+  const float4 col_12 = { m2[0][0], m2[1][0], m2[2][0], m2[3][0] };
+  const float4 col_22 = { m2[0][1], m2[1][1], m2[2][1], m2[3][1] };
+  const float4 col_32 = { m2[0][2], m2[1][2], m2[2][2], m2[3][2] };
+  const float4 col_42 = { m2[0][3], m2[1][3], m2[2][3], m2[3][3] };
 
-  floatT4x4 mul =
+  float4x4 mul =
   {{
     {{ dot(row_11, col_12), dot(row_11, col_22), dot(row_11, col_32), dot(row_11, col_42) }},
     {{ dot(row_21, col_12), dot(row_21, col_22), dot(row_21, col_32), dot(row_21, col_42) }},
@@ -81,20 +84,20 @@ floatT4x4 operator*(const floatT4x4& m1, const floatT4x4& m2)
   return mul;
 }
 
-floatT4 operator*(const floatT4x4& m1, const floatT4& v1)
+float4 operator*(const float4x4& m1, const float4& v1)
 {
-  const floatT4& row_11 = m1[0];
-  const floatT4& row_21 = m1[1];
-  const floatT4& row_31 = m1[2];
-  const floatT4& row_41 = m1[3];
+  const float4 row_11 = { m1[0][0], m1[0][1], m1[0][2], m1[0][3] };
+  const float4 row_21 = { m1[1][0], m1[1][1], m1[1][2], m1[1][3] };
+  const float4 row_31 = { m1[2][0], m1[2][1], m1[2][2], m1[2][3] };
+  const float4 row_41 = { m1[3][0], m1[3][1], m1[3][2], m1[3][3] };
 
-  floatT4 mul =
-  {{
-    { dot(row_11, v1) },
-    { dot(row_21, v1) },
-    { dot(row_31, v1) },
-    { dot(row_41, v1) },
-  }};
+  float4 mul =
+  {
+    dot(row_11, v1),
+    dot(row_21, v1),
+    dot(row_31, v1),
+    dot(row_41, v1),
+  };
 
   return mul;
 }
@@ -127,7 +130,7 @@ public:
     if (GetKey(tDX::Q).bHeld) { m_yaw += coeficient * 30; }
 
     m_cubeTranslationZ = std::max(m_cubeTranslationZ, -5.0f);
-    m_cubeTranslationZ = std::min(m_cubeTranslationZ, 0.5f);
+    m_cubeTranslationZ = std::min(m_cubeTranslationZ, -1.0f);
 
     m_cubeTranslationX = std::max(m_cubeTranslationX, -5.0f);
     m_cubeTranslationX = std::min(m_cubeTranslationX, 4.5f);
@@ -146,9 +149,23 @@ public:
     DrawLine(m_originX, 0, m_originX, m_windowHeight - 1, tDX::DARK_YELLOW);
 
     // 2D square
-    tDX::vf2d leftUp = {m_originX - m_cellSize + (m_cubeTranslationX * m_cellSize * 2) , m_originY - m_cellSize + (m_cubeTranslationZ * m_cellSize * 2) };
+    float2 leftUp = {m_originX - m_cellSize + (m_cubeTranslationX * m_cellSize * 2), m_originY - m_cellSize + (m_cubeTranslationZ * m_cellSize * 2) };
+    float size = m_cellSize * 2.0f;
 
-    DrawRect(std::round(leftUp.x), std::round(leftUp.y), m_cellSize * 2, m_cellSize * 2, tDX::RED);
+    std::array<float2, 4> m_rectangle =
+    {{
+      {leftUp.x       , leftUp.y       },
+      {leftUp.x + size, leftUp.y       },
+      {leftUp.x + size, leftUp.y + size},
+      {leftUp.x       , leftUp.y + size},
+    }};
+
+    for (auto& vertex : m_rectangle)
+    {
+    }
+
+    //DrawRect(std::round(leftUp.x), std::round(leftUp.y), m_cellSize * 2, m_cellSize * 2, tDX::RED);
+    DrawLine(std::round(m_rectangle[0].x), std::round(m_rectangle[0].y), std::round(m_rectangle[1].x), std::round(m_rectangle[1].y), tDX::RED);
 
     // Camera
     DrawRect(m_originX - 4, m_originY - 5 + 10, 8, 10, tDX::BLUE);
@@ -181,17 +198,17 @@ public:
     m_modelMatrix = m_translationMatrix * m_rotationMatrix;
 
     // View matrix
-    floatT3 zaxis = normalize(m_target - m_eye);
-    floatT3 xaxis = normalize(cross(zaxis, m_up));
-    floatT3 yaxis = cross(xaxis, zaxis);
+    float3 zaxis = normalize(m_target - m_eye);
+    float3 xaxis = normalize(cross(zaxis, m_up));
+    float3 yaxis = cross(xaxis, zaxis);
 
     zaxis = -zaxis;
 
     m_viewMatrix =
     {{
-      {{ xaxis[0], xaxis[1], xaxis[2], -dot(xaxis, m_eye) }},
-      {{ yaxis[0], yaxis[1], yaxis[2], -dot(yaxis, m_eye) }},
-      {{ zaxis[0], zaxis[1], zaxis[2], -dot(zaxis, m_eye) }},
+      {{ xaxis.x, xaxis.y, xaxis.z, -dot(xaxis, m_eye) }},
+      {{ yaxis.x, yaxis.y, yaxis.z, -dot(yaxis, m_eye) }},
+      {{ zaxis.x, zaxis.y, zaxis.z, -dot(zaxis, m_eye) }},
       {{ 0, 0, 0, 1 }}
     }};
 
@@ -219,47 +236,41 @@ public:
     DrawLine(originX3D, m_windowHeight, originX3D, m_windowHeight + m_windowHeight - 1, tDX::DARK_YELLOW);
 
     // Cube
-    std::array<floatT4, 8> transformedCube = m_cube;
+    std::array<float4, 8> transformedCube = m_cube;
 
     for (auto& vertex : transformedCube)
     {
       vertex = m_mvpMatrix * vertex;
 
-      if (vertex[3] > 0.0f)
+      if (vertex.w > 0.0f)
       {
-        vertex[0] = vertex[0] / vertex[3];
-        vertex[1] = vertex[1] / vertex[3];
-        vertex[2] = vertex[2] / vertex[3];
-      }
-      else
-      {
-        vertex[0] = vertex[0];
-        vertex[1] = vertex[1];
-        vertex[2] = vertex[2];
+        vertex.x = vertex.x / vertex.w;
+        vertex.y = vertex.y / vertex.w;
+        vertex.z = vertex.z / vertex.w;
       }
 
       // Viewport
-      vertex[0] = (vertex[0] + 1.0f) * (m_windowWidth - 1) * 0.5f + 0.0f; // plus X viewport origin
-      vertex[1] = (1.0f - vertex[1]) * (m_windowHeight - 1) * 0.5f + m_windowHeight; // plus Y viewport origin
+      vertex.x = (vertex.x + 1.0f) * (m_windowWidth - 1) * 0.5f + 0.0f; // plus X viewport origin
+      vertex.y = (1.0f - vertex.y) * (m_windowHeight - 1) * 0.5f + m_windowHeight; // plus Y viewport origin
     }
 
     tDX::vi2d clipWinPos = { 0, m_windowHeight };
     tDX::vi2d clipWinSize = { m_windowWidth - 1, m_windowHeight - 1 };
 
-    DrawLineClipped(std::round(transformedCube[0][0]), std::round(transformedCube[0][1]), std::round(transformedCube[1][0]), std::round(transformedCube[1][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[1][0]), std::round(transformedCube[1][1]), std::round(transformedCube[2][0]), std::round(transformedCube[2][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[2][0]), std::round(transformedCube[2][1]), std::round(transformedCube[3][0]), std::round(transformedCube[3][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[3][0]), std::round(transformedCube[3][1]), std::round(transformedCube[0][0]), std::round(transformedCube[0][1]), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[0].x), std::round(transformedCube[0].y), std::round(transformedCube[1].x), std::round(transformedCube[1].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[1].x), std::round(transformedCube[1].y), std::round(transformedCube[2].x), std::round(transformedCube[2].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[2].x), std::round(transformedCube[2].y), std::round(transformedCube[3].x), std::round(transformedCube[3].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[3].x), std::round(transformedCube[3].y), std::round(transformedCube[0].x), std::round(transformedCube[0].y), clipWinPos, clipWinSize, tDX::WHITE);
 
-    DrawLineClipped(std::round(transformedCube[4][0]), std::round(transformedCube[4][1]), std::round(transformedCube[5][0]), std::round(transformedCube[5][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[5][0]), std::round(transformedCube[5][1]), std::round(transformedCube[6][0]), std::round(transformedCube[6][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[6][0]), std::round(transformedCube[6][1]), std::round(transformedCube[7][0]), std::round(transformedCube[7][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[7][0]), std::round(transformedCube[7][1]), std::round(transformedCube[4][0]), std::round(transformedCube[4][1]), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[4].x), std::round(transformedCube[4].y), std::round(transformedCube[5].x), std::round(transformedCube[5].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[5].x), std::round(transformedCube[5].y), std::round(transformedCube[6].x), std::round(transformedCube[6].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[6].x), std::round(transformedCube[6].y), std::round(transformedCube[7].x), std::round(transformedCube[7].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[7].x), std::round(transformedCube[7].y), std::round(transformedCube[4].x), std::round(transformedCube[4].y), clipWinPos, clipWinSize, tDX::WHITE);
 
-    DrawLineClipped(std::round(transformedCube[0][0]), std::round(transformedCube[0][1]), std::round(transformedCube[4][0]), std::round(transformedCube[4][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[1][0]), std::round(transformedCube[1][1]), std::round(transformedCube[5][0]), std::round(transformedCube[5][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[2][0]), std::round(transformedCube[2][1]), std::round(transformedCube[6][0]), std::round(transformedCube[6][1]), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(std::round(transformedCube[3][0]), std::round(transformedCube[3][1]), std::round(transformedCube[7][0]), std::round(transformedCube[7][1]), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[0].x), std::round(transformedCube[0].y), std::round(transformedCube[4].x), std::round(transformedCube[4].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[1].x), std::round(transformedCube[1].y), std::round(transformedCube[5].x), std::round(transformedCube[5].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[2].x), std::round(transformedCube[2].y), std::round(transformedCube[6].x), std::round(transformedCube[6].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(std::round(transformedCube[3].x), std::round(transformedCube[3].y), std::round(transformedCube[7].x), std::round(transformedCube[7].y), clipWinPos, clipWinSize, tDX::WHITE);
 
     //DrawCircle(std::round(transformedCube[0].x), std::round(transformedCube[0].y), 2, tDX::YELLOW);
 
@@ -268,17 +279,17 @@ public:
     DrawRect(0, m_windowHeight, m_windowWidth - 1, m_windowHeight - 1, tDX::WHITE);
 
     // Print matrices
-    floatT4 worldVertex = m_modelMatrix * m_cube[0];
-    floatT4 viewVertex = m_viewMatrix * worldVertex;
-    floatT4 projVertex = m_projectionMatrix * viewVertex;
+    float4 worldVertex = m_modelMatrix * m_cube[0];
+    float4 viewVertex = m_viewMatrix * worldVertex;
+    float4 projVertex = m_projectionMatrix * viewVertex;
 
     std::stringstream modelMatrixToPrint;
 
     modelMatrixToPrint << std::fixed << std::setprecision(2) <<
-      std::setw(6) << m_modelMatrix[0][0] << std::setw(6) << m_modelMatrix[0][1] << std::setw(6) << m_modelMatrix[0][2] << std::setw(6) << m_modelMatrix[0][3] << "    |" << std::setw(5) << worldVertex[0] << "|" << '\n' <<
-      std::setw(6) << m_modelMatrix[1][0] << std::setw(6) << m_modelMatrix[1][1] << std::setw(6) << m_modelMatrix[1][2] << std::setw(6) << m_modelMatrix[1][3] << "    |" << std::setw(5) << worldVertex[1] << "|" << '\n' <<
-      std::setw(6) << m_modelMatrix[2][0] << std::setw(6) << m_modelMatrix[2][1] << std::setw(6) << m_modelMatrix[2][2] << std::setw(6) << m_modelMatrix[2][3] << "    |" << std::setw(5) << worldVertex[2] << "|" << '\n' <<
-      std::setw(6) << m_modelMatrix[3][0] << std::setw(6) << m_modelMatrix[3][1] << std::setw(6) << m_modelMatrix[3][2] << std::setw(6) << m_modelMatrix[3][3] << "    |" << std::setw(5) << worldVertex[3] << "|" << '\n';
+      std::setw(6) << m_modelMatrix[0][0] << std::setw(6) << m_modelMatrix[0][1] << std::setw(6) << m_modelMatrix[0][2] << std::setw(6) << m_modelMatrix[0][3] << "    |" << std::setw(5) << worldVertex.x << "|" << '\n' <<
+      std::setw(6) << m_modelMatrix[1][0] << std::setw(6) << m_modelMatrix[1][1] << std::setw(6) << m_modelMatrix[1][2] << std::setw(6) << m_modelMatrix[1][3] << "    |" << std::setw(5) << worldVertex.y << "|" << '\n' <<
+      std::setw(6) << m_modelMatrix[2][0] << std::setw(6) << m_modelMatrix[2][1] << std::setw(6) << m_modelMatrix[2][2] << std::setw(6) << m_modelMatrix[2][3] << "    |" << std::setw(5) << worldVertex.z << "|" << '\n' <<
+      std::setw(6) << m_modelMatrix[3][0] << std::setw(6) << m_modelMatrix[3][1] << std::setw(6) << m_modelMatrix[3][2] << std::setw(6) << m_modelMatrix[3][3] << "    |" << std::setw(5) << worldVertex.w << "|" << '\n';
 
     DrawString(310, 10, "Model to world");
     DrawString(300, 25, modelMatrixToPrint.str());
@@ -286,9 +297,9 @@ public:
     std::stringstream lookAtToPrint;
 
     lookAtToPrint << std::fixed << std::setprecision(2) <<
-      "  Eye    " << std::setw(6) << m_eye[0] << std::setw(6) << m_eye[1] << std::setw(6) << m_eye[2] << '\n' <<
-      "  Target " << std::setw(6) << m_target[0] << std::setw(6) << m_target[1] << std::setw(6) << m_target[2] << '\n' <<
-      "  Up     " << std::setw(6) << m_up[0] << std::setw(6) << m_up[1] << std::setw(6) << m_up[2] << '\n';
+      "  Eye    " << std::setw(6) << m_eye.x << std::setw(6) << m_eye.y << std::setw(6) << m_eye.z << '\n' <<
+      "  Target " << std::setw(6) << m_target.x << std::setw(6) << m_target.y << std::setw(6) << m_target.z << '\n' <<
+      "  Up     " << std::setw(6) << m_up.x << std::setw(6) << m_up.y << std::setw(6) << m_up.z << '\n';
 
     DrawString(310, 70, "LookAt input data", tDX::GREY);
     DrawString(300, 85, lookAtToPrint.str(), tDX::GREY);
@@ -296,10 +307,10 @@ public:
     std::stringstream viewMatrixToPrint;
 
     viewMatrixToPrint << std::fixed << std::setprecision(2) <<
-      std::setw(6) << m_viewMatrix[0][0] << std::setw(6) << m_viewMatrix[0][1] << std::setw(6) << m_viewMatrix[0][2] << std::setw(6) << m_viewMatrix[0][3] << "    |" << std::setw(5) << viewVertex[0] << "|" << '\n' <<
-      std::setw(6) << m_viewMatrix[1][0] << std::setw(6) << m_viewMatrix[1][1] << std::setw(6) << m_viewMatrix[1][2] << std::setw(6) << m_viewMatrix[1][3] << "    |" << std::setw(5) << viewVertex[1] << "|" << '\n' <<
-      std::setw(6) << m_viewMatrix[2][0] << std::setw(6) << m_viewMatrix[2][1] << std::setw(6) << m_viewMatrix[2][2] << std::setw(6) << m_viewMatrix[2][3] << "    |" << std::setw(5) << viewVertex[2] << "|" << '\n' <<
-      std::setw(6) << m_viewMatrix[3][0] << std::setw(6) << m_viewMatrix[3][1] << std::setw(6) << m_viewMatrix[3][2] << std::setw(6) << m_viewMatrix[3][3] << "    |" << std::setw(5) << viewVertex[3] << "|" << '\n';
+      std::setw(6) << m_viewMatrix[0][0] << std::setw(6) << m_viewMatrix[0][1] << std::setw(6) << m_viewMatrix[0][2] << std::setw(6) << m_viewMatrix[0][3] << "    |" << std::setw(5) << viewVertex.x << "|" << '\n' <<
+      std::setw(6) << m_viewMatrix[1][0] << std::setw(6) << m_viewMatrix[1][1] << std::setw(6) << m_viewMatrix[1][2] << std::setw(6) << m_viewMatrix[1][3] << "    |" << std::setw(5) << viewVertex.y << "|" << '\n' <<
+      std::setw(6) << m_viewMatrix[2][0] << std::setw(6) << m_viewMatrix[2][1] << std::setw(6) << m_viewMatrix[2][2] << std::setw(6) << m_viewMatrix[2][3] << "    |" << std::setw(5) << viewVertex.z << "|" << '\n' <<
+      std::setw(6) << m_viewMatrix[3][0] << std::setw(6) << m_viewMatrix[3][1] << std::setw(6) << m_viewMatrix[3][2] << std::setw(6) << m_viewMatrix[3][3] << "    |" << std::setw(5) << viewVertex.w << "|" << '\n';
 
     DrawString(310, 130, "world to View");
     DrawString(300, 145, viewMatrixToPrint.str());
@@ -307,10 +318,10 @@ public:
     std::stringstream projectionMatrixToPrint;
 
     projectionMatrixToPrint << std::fixed << std::setprecision(2) <<
-      std::setw(6) << m_projectionMatrix[0][0] << std::setw(6) << m_projectionMatrix[0][1] << std::setw(6) << m_projectionMatrix[0][2] << std::setw(6) << m_projectionMatrix[0][3] << "    |" << std::setw(5) << projVertex[0] << "|" << '\n' <<
-      std::setw(6) << m_projectionMatrix[1][0] << std::setw(6) << m_projectionMatrix[1][1] << std::setw(6) << m_projectionMatrix[1][2] << std::setw(6) << m_projectionMatrix[1][3] << "    |" << std::setw(5) << projVertex[1] << "|" << '\n' <<
-      std::setw(6) << m_projectionMatrix[2][0] << std::setw(6) << m_projectionMatrix[2][1] << std::setw(6) << m_projectionMatrix[2][2] << std::setw(6) << m_projectionMatrix[2][3] << "    |" << std::setw(5) << projVertex[2] << "|" << '\n' <<
-      std::setw(6) << m_projectionMatrix[3][0] << std::setw(6) << m_projectionMatrix[3][1] << std::setw(6) << m_projectionMatrix[3][2] << std::setw(6) << m_projectionMatrix[3][3] << "    |" << std::setw(5) << projVertex[3] << "|" << '\n';
+      std::setw(6) << m_projectionMatrix[0][0] << std::setw(6) << m_projectionMatrix[0][1] << std::setw(6) << m_projectionMatrix[0][2] << std::setw(6) << m_projectionMatrix[0][3] << "    |" << std::setw(5) << projVertex.x << "|" << '\n' <<
+      std::setw(6) << m_projectionMatrix[1][0] << std::setw(6) << m_projectionMatrix[1][1] << std::setw(6) << m_projectionMatrix[1][2] << std::setw(6) << m_projectionMatrix[1][3] << "    |" << std::setw(5) << projVertex.y << "|" << '\n' <<
+      std::setw(6) << m_projectionMatrix[2][0] << std::setw(6) << m_projectionMatrix[2][1] << std::setw(6) << m_projectionMatrix[2][2] << std::setw(6) << m_projectionMatrix[2][3] << "    |" << std::setw(5) << projVertex.z << "|" << '\n' <<
+      std::setw(6) << m_projectionMatrix[3][0] << std::setw(6) << m_projectionMatrix[3][1] << std::setw(6) << m_projectionMatrix[3][2] << std::setw(6) << m_projectionMatrix[3][3] << "    |" << std::setw(5) << projVertex.w << "|" << '\n';
 
     DrawString(310, 190, "Projection");
     DrawString(300, 205, projectionMatrixToPrint.str());
@@ -329,10 +340,10 @@ public:
     std::stringstream cubePointsPrint;
 
     cubePointsPrint << std::fixed << std::setprecision(1) <<
-      std::setw(7) << transformedCube[0][0] << std::setw(7) << transformedCube[0][1] << std::setw(5) << transformedCube[0][2] << std::setw(5) << transformedCube[0][3] << '\n' <<
-      std::setw(7) << transformedCube[1][0] << std::setw(7) << transformedCube[1][1] << std::setw(5) << transformedCube[1][2] << std::setw(5) << transformedCube[1][3] << '\n' <<
-      std::setw(7) << transformedCube[2][0] << std::setw(7) << transformedCube[2][1] << std::setw(5) << transformedCube[2][2] << std::setw(5) << transformedCube[2][3] << '\n' <<
-      std::setw(7) << transformedCube[3][0] << std::setw(7) << transformedCube[3][1] << std::setw(5) << transformedCube[3][2] << std::setw(5) << transformedCube[3][3] << '\n';
+      std::setw(7) << transformedCube[0].x << std::setw(7) << transformedCube[0].y << std::setw(5) << transformedCube[0].z << std::setw(5) << transformedCube[0].w << '\n' <<
+      std::setw(7) << transformedCube[1].x << std::setw(7) << transformedCube[1].y << std::setw(5) << transformedCube[1].z << std::setw(5) << transformedCube[1].w << '\n' <<
+      std::setw(7) << transformedCube[2].x << std::setw(7) << transformedCube[2].y << std::setw(5) << transformedCube[2].z << std::setw(5) << transformedCube[2].w << '\n' <<
+      std::setw(7) << transformedCube[3].x << std::setw(7) << transformedCube[3].y << std::setw(5) << transformedCube[3].z << std::setw(5) << transformedCube[3].w << '\n';
 
     DrawString(310, 310, "Cube vertices");
     DrawString(300, 325, cubePointsPrint.str());
@@ -349,23 +360,24 @@ private:
   constexpr static int32_t m_cellSize = m_windowHeight / 14;
   constexpr static uint8_t m_gridRows = m_windowHeight / m_cellSize + 1;
   constexpr static uint8_t m_gridCols = m_windowWidth / m_cellSize + 1;
+
   constexpr static float m_aspectRatio = (float)m_windowWidth / (float)m_windowHeight;
 
   // Model
-  constexpr static std::array<floatT4, 8> m_cube =
+  constexpr static std::array<float4, 8> m_cube =
   {{
-    {{-0.5, -0.5, -0.5, 1.0 }},
-    {{ 0.5, -0.5, -0.5, 1.0 }},
-    {{ 0.5,  0.5, -0.5, 1.0 }},
-    {{-0.5,  0.5, -0.5, 1.0 }},
-    {{-0.5, -0.5,  0.5, 1.0 }},
-    {{ 0.5, -0.5,  0.5, 1.0 }},
-    {{ 0.5,  0.5,  0.5, 1.0 }},
-    {{-0.5,  0.5,  0.5, 1.0 }}
+    {-0.5, -0.5, -0.5, 1.0 },
+    { 0.5, -0.5, -0.5, 1.0 },
+    { 0.5,  0.5, -0.5, 1.0 },
+    {-0.5,  0.5, -0.5, 1.0 },
+    {-0.5, -0.5,  0.5, 1.0 },
+    { 0.5, -0.5,  0.5, 1.0 },
+    { 0.5,  0.5,  0.5, 1.0 },
+    {-0.5,  0.5,  0.5, 1.0 }
   }};
 
   // Default matrix
-  constexpr static floatT4x4 m_identityMatrix =
+  constexpr static float4x4 m_identityMatrix =
   {{
     {{ 1, 0, 0, 0 }},
     {{ 0, 1, 0, 0 }},
@@ -379,19 +391,19 @@ private:
   float m_yaw = 0;
 
   // Matrices to describe a scene
-  floatT4x4 m_translationMatrix;
-  floatT4x4 m_rotationMatrix;
-  floatT4x4 m_modelMatrix;
+  float4x4 m_translationMatrix;
+  float4x4 m_rotationMatrix;
+  float4x4 m_modelMatrix;
 
-  floatT4x4 m_viewMatrix;
-  floatT4x4 m_projectionMatrix;
+  float4x4 m_viewMatrix;
+  float4x4 m_projectionMatrix;
 
-  floatT4x4 m_mvpMatrix;
+  float4x4 m_mvpMatrix;
 
   // Look at
-  floatT3 m_eye = { 0, 0, 0 };
-  floatT3 m_target = { 0, 0, -1 };
-  floatT3 m_up = { 0, 1, 0 };
+  float3 m_eye = { 0, 0, 0 };
+  float3 m_target = { 0, 0, -1 };
+  float3 m_up = { 0, 1, 0 };
 };
 
 
