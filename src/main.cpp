@@ -47,7 +47,6 @@ float3 normalize(const float3& v1)
 
 // Operator overloading
 
-
 float3 operator-(const float3 &v1) { return { -v1.x, -v1.y, -v1.z }; }
 float3 operator-(const float3 &v1, const float3 &v2)
 {
@@ -102,6 +101,17 @@ float4 operator*(const float4x4& m1, const float4& v1)
   return mul;
 }
 
+float2& operator-=(float2& v1, const float2& v2)
+{
+  v1.x = v1.x - v2.x;
+  v1.y = v1.y - v2.y;
+
+  return v1;
+}
+
+float2 operator+(const float2& v1, const float s1) { return {v1.x + s1, v1.y + s1}; }
+float2 operator+(const float2& v1, const float2& v2) { return {v1.x + v2.x, v1.y + v2.y}; }
+
 class MatrixDemo : public tDX::PixelGameEngine
 {
 public:
@@ -126,8 +136,8 @@ public:
     if (GetKey(tDX::A).bHeld) { m_cubeTranslationX -= coeficient; }
     if (GetKey(tDX::W).bHeld) { m_cubeTranslationZ -= coeficient; }
     if (GetKey(tDX::S).bHeld) { m_cubeTranslationZ += coeficient; }
-    if (GetKey(tDX::E).bHeld) { m_yaw -= coeficient * 30; }
-    if (GetKey(tDX::Q).bHeld) { m_yaw += coeficient * 30; }
+    if (GetKey(tDX::E).bHeld) { m_yaw += coeficient * 30; }
+    if (GetKey(tDX::Q).bHeld) { m_yaw -= coeficient * 30; }
 
     m_cubeTranslationZ = std::max(m_cubeTranslationZ, -5.0f);
     m_cubeTranslationZ = std::min(m_cubeTranslationZ, -1.0f);
@@ -160,12 +170,30 @@ public:
       {leftUp.x       , leftUp.y + size},
     }};
 
+    float2 centerVertex = leftUp + m_cellSize;
+
     for (auto& vertex : m_rectangle)
     {
+      vertex -= centerVertex;
+
+      float2 rotatedVertex;
+      rotatedVertex.x = vertex.x * cos(toRad(m_yaw)) - vertex.y * sin(toRad(m_yaw));
+      rotatedVertex.y = vertex.x * sin(toRad(m_yaw)) + vertex.y * cos(toRad(m_yaw));
+
+      //vertex.x = vertex.x * cos(toRad(m_yaw)) + vertex.y * sin(toRad(m_yaw));
+      //vertex.y = (-vertex.x * sin(toRad(m_yaw))) + vertex.y * cos(toRad(m_yaw));
+
+      vertex = rotatedVertex + centerVertex;
     }
+
+    DrawCircle(std::round(centerVertex.x), std::round(centerVertex.y), 2, tDX::YELLOW);
+
 
     //DrawRect(std::round(leftUp.x), std::round(leftUp.y), m_cellSize * 2, m_cellSize * 2, tDX::RED);
     DrawLine(std::round(m_rectangle[0].x), std::round(m_rectangle[0].y), std::round(m_rectangle[1].x), std::round(m_rectangle[1].y), tDX::RED);
+    DrawLine(std::round(m_rectangle[1].x), std::round(m_rectangle[1].y), std::round(m_rectangle[2].x), std::round(m_rectangle[2].y), tDX::RED);
+    DrawLine(std::round(m_rectangle[2].x), std::round(m_rectangle[2].y), std::round(m_rectangle[3].x), std::round(m_rectangle[3].y), tDX::RED);
+    DrawLine(std::round(m_rectangle[3].x), std::round(m_rectangle[3].y), std::round(m_rectangle[0].x), std::round(m_rectangle[0].y), tDX::RED);
 
     // Camera
     DrawRect(m_originX - 4, m_originY - 5 + 10, 8, 10, tDX::BLUE);
