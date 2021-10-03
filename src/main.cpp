@@ -166,8 +166,8 @@ public:
     float fovx = 2 * atan(tan(toRad(45.0f * 0.5)) * m_aspectRatio);
     float length = (tan(fovx / 2.0f) * m_windowHeight);
 
-    DrawLineClipped(lround(m_originX), lround(m_originY), lround(m_originX - length), lround(m_originY - m_windowHeight), { 0, 0 }, { m_windowWidth - 1, m_windowHeight - 1 }, tDX::BLUE);
-    DrawLineClipped(lround(m_originX), lround(m_originY), lround(m_originX + length), lround(m_originY - m_windowHeight), { 0, 0 }, { m_windowWidth - 1, m_windowHeight - 1 }, tDX::BLUE);
+    DrawLineClipped(m_originX, m_originY, m_originX - length, m_originY - m_windowHeight, { 0, 0 }, { m_windowWidth - 1, m_windowHeight - 1 }, tDX::BLUE);
+    DrawLineClipped(m_originX, m_originY, m_originX + length, m_originY - m_windowHeight, { 0, 0 }, { m_windowWidth - 1, m_windowHeight - 1 }, tDX::BLUE);
 
     // 2D square
     float2 leftUp = {m_originX - m_cellSize + (m_cubeTranslationX * m_cellSize * 2), m_originY - m_cellSize + (m_cubeTranslationZ * m_cellSize * 2) };
@@ -277,20 +277,20 @@ public:
     tDX::vi2d clipWinPos = { 0, m_windowHeight };
     tDX::vi2d clipWinSize = { m_windowWidth - 1, m_windowHeight - 1 };
 
-    DrawLineClipped(lround(transformedCube[0].x), lround(transformedCube[0].y), lround(transformedCube[1].x), lround(transformedCube[1].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[1].x), lround(transformedCube[1].y), lround(transformedCube[2].x), lround(transformedCube[2].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[2].x), lround(transformedCube[2].y), lround(transformedCube[3].x), lround(transformedCube[3].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[3].x), lround(transformedCube[3].y), lround(transformedCube[0].x), lround(transformedCube[0].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[0].x, transformedCube[0].y, transformedCube[1].x, transformedCube[1].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[1].x, transformedCube[1].y, transformedCube[2].x, transformedCube[2].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[2].x, transformedCube[2].y, transformedCube[3].x, transformedCube[3].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[3].x, transformedCube[3].y, transformedCube[0].x, transformedCube[0].y, clipWinPos, clipWinSize, tDX::WHITE);
 
-    DrawLineClipped(lround(transformedCube[4].x), lround(transformedCube[4].y), lround(transformedCube[5].x), lround(transformedCube[5].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[5].x), lround(transformedCube[5].y), lround(transformedCube[6].x), lround(transformedCube[6].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[6].x), lround(transformedCube[6].y), lround(transformedCube[7].x), lround(transformedCube[7].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[7].x), lround(transformedCube[7].y), lround(transformedCube[4].x), lround(transformedCube[4].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[4].x, transformedCube[4].y, transformedCube[5].x, transformedCube[5].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[5].x, transformedCube[5].y, transformedCube[6].x, transformedCube[6].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[6].x, transformedCube[6].y, transformedCube[7].x, transformedCube[7].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[7].x, transformedCube[7].y, transformedCube[4].x, transformedCube[4].y, clipWinPos, clipWinSize, tDX::WHITE);
 
-    DrawLineClipped(lround(transformedCube[0].x), lround(transformedCube[0].y), lround(transformedCube[4].x), lround(transformedCube[4].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[1].x), lround(transformedCube[1].y), lround(transformedCube[5].x), lround(transformedCube[5].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[2].x), lround(transformedCube[2].y), lround(transformedCube[6].x), lround(transformedCube[6].y), clipWinPos, clipWinSize, tDX::WHITE);
-    DrawLineClipped(lround(transformedCube[3].x), lround(transformedCube[3].y), lround(transformedCube[7].x), lround(transformedCube[7].y), clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[0].x, transformedCube[0].y, transformedCube[4].x, transformedCube[4].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[1].x, transformedCube[1].y, transformedCube[5].x, transformedCube[5].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[2].x, transformedCube[2].y, transformedCube[6].x, transformedCube[6].y, clipWinPos, clipWinSize, tDX::WHITE);
+    DrawLineClipped(transformedCube[3].x, transformedCube[3].y, transformedCube[7].x, transformedCube[7].y, clipWinPos, clipWinSize, tDX::WHITE);
 
     if (transformedCube[0].x > 0 && transformedCube[0].x < m_windowWidth && transformedCube[0].y > m_windowHeight && transformedCube[0].y < g::screenHeight)
       DrawCircle(lround(transformedCube[0].x), lround(transformedCube[0].y), 2, tDX::YELLOW);
