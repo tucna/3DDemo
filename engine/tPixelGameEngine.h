@@ -1353,36 +1353,36 @@ namespace tDX
         // x = x1 + (1 / slope) * (y - y1)
         if (codeOut & top) // above
         {
-          x = x1 + (x2 - x1) * (yMax - y1) / (y2 - y1);
-          y = yMax;
+          x = x1 + (x2 - x1) * (yMax - y1) / static_cast<float>(y2 - y1);
+          y = static_cast<float>(yMax);
         }
         else if (codeOut & bottom) // bellow
         {
-          x = x1 + (x2 - x1) * (yMin - y1) / (y2 - y1);
-          y = yMin;
+          x = x1 + (x2 - x1) * (yMin - y1) / static_cast<float>(y2 - y1);
+          y = static_cast<float>(yMin);
         }
         else if (codeOut & right) // right
         {
-          y = y1 + (y2 - y1) * (xMax - x1) / (x2 - x1);
-          x = xMax;
+          y = y1 + (y2 - y1) * (xMax - x1) / static_cast<float>(x2 - x1);
+          x = static_cast<float>(xMax);
         }
         else if (codeOut & left)
         {
           // point is to the left of rectangle
-          y = y1 + (y2 - y1) * (xMin - x1) / (x2 - x1);
-          x = xMin;
+          y = y1 + (y2 - y1) * (xMin - x1) / static_cast<float>(x2 - x1);
+          x = static_cast<float>(xMin);
         }
 
         if (codeOut == code1)
         {
-          v1.x = round(x);
-          v1.y = round(y);
+          v1.x = lround(x);
+          v1.y = lround(y);
           code1 = computeCode(v1);
         }
         else
         {
-          v2.x = round(x);
-          v2.y = round(y);
+          v2.x = lround(x);
+          v2.y = lround(y);
           code2 = computeCode(v2);
         }
       }
