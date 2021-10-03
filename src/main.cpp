@@ -158,6 +158,17 @@ public:
     DrawLine(0, m_originY, m_windowWidth - 1, m_originY, tDX::DARK_YELLOW);
     DrawLine(m_originX, 0, m_originX, m_windowHeight - 1, tDX::DARK_YELLOW);
 
+    // Camera
+    DrawRect(m_originX - 4, m_originY - 5 + 10, 8, 10, tDX::BLUE);
+    DrawRect(m_originX - 2, m_originY - 10 + 10, 4, 4, tDX::BLUE);
+
+    // Draw frustum
+    float fovx = 2 * std::atan(std::tan(toRad(45.0f * 0.5)) * m_aspectRatio);
+    float length = (std::tan(fovx / 2.0f) * m_windowHeight);
+
+    DrawLineClipped(std::round(m_originX), std::round(m_originY), std::round(m_originX - length), std::round(m_originY - m_windowHeight), { 0, 0 }, { m_windowWidth - 1, m_windowHeight - 1 }, tDX::BLUE);
+    DrawLineClipped(std::round(m_originX), std::round(m_originY), std::round(m_originX + length), std::round(m_originY - m_windowHeight), { 0, 0 }, { m_windowWidth - 1, m_windowHeight - 1 }, tDX::BLUE);
+
     // 2D square
     float2 leftUp = {m_originX - m_cellSize + (m_cubeTranslationX * m_cellSize * 2), m_originY - m_cellSize + (m_cubeTranslationZ * m_cellSize * 2) };
     float size = m_cellSize * 2.0f;
@@ -180,31 +191,15 @@ public:
       rotatedVertex.x = vertex.x * cos(toRad(m_yaw)) - vertex.y * sin(toRad(m_yaw));
       rotatedVertex.y = vertex.x * sin(toRad(m_yaw)) + vertex.y * cos(toRad(m_yaw));
 
-      //vertex.x = vertex.x * cos(toRad(m_yaw)) + vertex.y * sin(toRad(m_yaw));
-      //vertex.y = (-vertex.x * sin(toRad(m_yaw))) + vertex.y * cos(toRad(m_yaw));
-
       vertex = rotatedVertex + centerVertex;
     }
 
-    DrawCircle(std::round(centerVertex.x), std::round(centerVertex.y), 2, tDX::YELLOW);
-
-
-    //DrawRect(std::round(leftUp.x), std::round(leftUp.y), m_cellSize * 2, m_cellSize * 2, tDX::RED);
     DrawLine(std::round(m_rectangle[0].x), std::round(m_rectangle[0].y), std::round(m_rectangle[1].x), std::round(m_rectangle[1].y), tDX::RED);
     DrawLine(std::round(m_rectangle[1].x), std::round(m_rectangle[1].y), std::round(m_rectangle[2].x), std::round(m_rectangle[2].y), tDX::RED);
     DrawLine(std::round(m_rectangle[2].x), std::round(m_rectangle[2].y), std::round(m_rectangle[3].x), std::round(m_rectangle[3].y), tDX::RED);
     DrawLine(std::round(m_rectangle[3].x), std::round(m_rectangle[3].y), std::round(m_rectangle[0].x), std::round(m_rectangle[0].y), tDX::RED);
 
-    // Camera
-    DrawRect(m_originX - 4, m_originY - 5 + 10, 8, 10, tDX::BLUE);
-    DrawRect(m_originX - 2, m_originY - 10 + 10, 4, 4, tDX::BLUE);
-
-    // Draw frustum
-    float fovx = 2 * std::atan(std::tan(toRad(45.0f * 0.5)) * m_aspectRatio);
-    float length = (std::tan(fovx/2.0f) * m_windowHeight);
-
-    DrawLineClipped(std::round(m_originX), std::round(m_originY), std::round(m_originX - length), std::round(m_originY - m_windowHeight), {0, 0}, { m_windowWidth - 1, m_windowHeight - 1 }, tDX::BLUE);
-    DrawLineClipped(std::round(m_originX), std::round(m_originY), std::round(m_originX + length), std::round(m_originY - m_windowHeight), { 0, 0 }, { m_windowWidth - 1, m_windowHeight - 1 }, tDX::BLUE);
+    DrawCircle(std::round(m_rectangle[0].x), std::round(m_rectangle[0].y), 2, tDX::YELLOW);
 
     // World matrix
     m_translationMatrix =
@@ -270,12 +265,9 @@ public:
     {
       vertex = m_mvpMatrix * vertex;
 
-      if (vertex.w > 0.0f)
-      {
-        vertex.x = vertex.x / vertex.w;
-        vertex.y = vertex.y / vertex.w;
-        vertex.z = vertex.z / vertex.w;
-      }
+      vertex.x = vertex.x / vertex.w;
+      vertex.y = vertex.y / vertex.w;
+      vertex.z = vertex.z / vertex.w;
 
       // Viewport
       vertex.x = (vertex.x + 1.0f) * (m_windowWidth - 1) * 0.5f + 0.0f; // plus X viewport origin
@@ -300,7 +292,8 @@ public:
     DrawLineClipped(std::round(transformedCube[2].x), std::round(transformedCube[2].y), std::round(transformedCube[6].x), std::round(transformedCube[6].y), clipWinPos, clipWinSize, tDX::WHITE);
     DrawLineClipped(std::round(transformedCube[3].x), std::round(transformedCube[3].y), std::round(transformedCube[7].x), std::round(transformedCube[7].y), clipWinPos, clipWinSize, tDX::WHITE);
 
-    //DrawCircle(std::round(transformedCube[0].x), std::round(transformedCube[0].y), 2, tDX::YELLOW);
+    if (transformedCube[0].x > 0 && transformedCube[0].x < m_windowWidth && transformedCube[0].y > m_windowHeight && transformedCube[0].y < g::screenHeight)
+      DrawCircle(std::round(transformedCube[0].x), std::round(transformedCube[0].y), 2, tDX::YELLOW);
 
     // Windows borders
     DrawRect(0, 0, m_windowWidth - 1, m_windowHeight - 1, tDX::WHITE);
@@ -351,7 +344,7 @@ public:
       std::setw(6) << m_projectionMatrix[2][0] << std::setw(6) << m_projectionMatrix[2][1] << std::setw(6) << m_projectionMatrix[2][2] << std::setw(6) << m_projectionMatrix[2][3] << "    |" << std::setw(5) << projVertex.z << "|" << '\n' <<
       std::setw(6) << m_projectionMatrix[3][0] << std::setw(6) << m_projectionMatrix[3][1] << std::setw(6) << m_projectionMatrix[3][2] << std::setw(6) << m_projectionMatrix[3][3] << "    |" << std::setw(5) << projVertex.w << "|" << '\n';
 
-    DrawString(310, 190, "Projection");
+    DrawString(310, 190, "view to Projection");
     DrawString(300, 205, projectionMatrixToPrint.str());
 
     std::stringstream mvpMatrixToPrint;
@@ -362,19 +355,16 @@ public:
       std::setw(6) << m_mvpMatrix[2][0] << std::setw(6) << m_mvpMatrix[2][1] << std::setw(6) << m_mvpMatrix[2][2] << std::setw(6) << m_mvpMatrix[2][3] << '\n' <<
       std::setw(6) << m_mvpMatrix[3][0] << std::setw(6) << m_mvpMatrix[3][1] << std::setw(6) << m_mvpMatrix[3][2] << std::setw(6) << m_mvpMatrix[3][3] << '\n';
 
-    DrawString(310, 250, "MVP");
-    DrawString(300, 265, mvpMatrixToPrint.str());
+    DrawString(310, 250, "MVP matrix", tDX::GREY);
+    DrawString(300, 265, mvpMatrixToPrint.str(), tDX::GREY);
 
-    std::stringstream cubePointsPrint;
+    std::stringstream cubePointPrint;
 
-    cubePointsPrint << std::fixed << std::setprecision(1) <<
-      std::setw(7) << transformedCube[0].x << std::setw(7) << transformedCube[0].y << std::setw(5) << transformedCube[0].z << std::setw(5) << transformedCube[0].w << '\n' <<
-      std::setw(7) << transformedCube[1].x << std::setw(7) << transformedCube[1].y << std::setw(5) << transformedCube[1].z << std::setw(5) << transformedCube[1].w << '\n' <<
-      std::setw(7) << transformedCube[2].x << std::setw(7) << transformedCube[2].y << std::setw(5) << transformedCube[2].z << std::setw(5) << transformedCube[2].w << '\n' <<
-      std::setw(7) << transformedCube[3].x << std::setw(7) << transformedCube[3].y << std::setw(5) << transformedCube[3].z << std::setw(5) << transformedCube[3].w << '\n';
+    cubePointPrint << std::fixed << std::setprecision(1) <<
+      std::setw(7) << transformedCube[0].x << std::setw(7) << transformedCube[0].y << std::setw(5) << transformedCube[0].z << std::setw(5) << transformedCube[0].w << '\n';
 
-    DrawString(310, 310, "Cube vertices");
-    DrawString(300, 325, cubePointsPrint.str());
+    DrawString(310, 310, "Cube vertex in screen space");
+    DrawString(300, 325, cubePointPrint.str());
 
     return true;
   }
@@ -433,7 +423,6 @@ private:
   float3 m_target = { 0, 0, -1 };
   float3 m_up = { 0, 1, 0 };
 };
-
 
 int main()
 {
