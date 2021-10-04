@@ -15,3 +15,4 @@ The project is built on [tPixelGameEngine](https://github.com/tucna/tPixelGameEn
 - 2D and 3D preview of the scene.
 - Fixed camera with frustum preview.
 - All matrices used for all steps needed for rendering are printed out.
+- Cohen-Sutherland line clipping.
