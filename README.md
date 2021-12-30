@@ -5,7 +5,7 @@ Small program visually demonstrating some basics of linear algebra.
   <img src="doc/2.jpg" width=380>&nbsp;<img src="doc/1.jpg" width=380>
 </p>
 
-The project is built on [tPixelGameEngine](https://github.com/tucna/tPixelGameEngine) which is only one dependency used exlusively for pixel drawing.
+The project is built on [tPixelGameEngine](https://github.com/tucna/tPixelGameEngine) which is only one dependency used exclusively for pixel drawing.
 
 # Controls
 - `W/A/S/D` - move the cube.
