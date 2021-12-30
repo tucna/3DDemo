@@ -221,32 +221,33 @@ public:
     m_modelMatrix = m_translationMatrix * m_rotationMatrix;
 
     // View matrix
-    float3 zaxis = normalize(m_target - m_eye);
-    float3 xaxis = normalize(cross(zaxis, m_up));
-    float3 yaxis = cross(xaxis, zaxis);
-
-    zaxis = -zaxis;
+    float3 zaxis = normalize(m_eye - m_target);
+    float3 xaxis = normalize(cross(m_up, zaxis));
+    float3 yaxis = cross(zaxis, xaxis);
 
     m_viewMatrix =
-    {{
+    { {
       {{ xaxis.x, xaxis.y, xaxis.z, -dot(xaxis, m_eye) }},
       {{ yaxis.x, yaxis.y, yaxis.z, -dot(yaxis, m_eye) }},
       {{ zaxis.x, zaxis.y, zaxis.z, -dot(zaxis, m_eye) }},
       {{ 0, 0, 0, 1 }}
-    }};
+    } };
 
     // Projection
     float fovY = 45.0f;
     float n = 0.1f;
-    float f = 100.0f;
+    float f = 5.0f;
     float tan_fovY = tan(toRad(fovY/2.0f));
+
+    float yScale = 1.0f / tan(toRad(fovY / 2.0f));
+    float xScale = yScale / m_aspectRatio;
 
     m_projectionMatrix =
     {{
-      {{ 1.0f/(m_aspectRatio*tan_fovY), 0              , 0           , 0              }},
-      {{ 0                            , 1.0f / tan_fovY, 0           , 0              }},
-      {{ 0                            , 0              , -(f+n)/(f-n), -(2*f*n)/(f-n) }},
-      {{ 0                            , 0              , -1          , 0              }}
+      {{ xScale, 0     , 0      , 0               }},
+      {{ 0     , yScale, 0      , 0               }},
+      {{ 0     , 0     , f/(n-f), n * f / (n - f) }},
+      {{ 0     , 0     , -1     , 0               }}
     }};
 
     m_mvpMatrix = m_projectionMatrix * m_viewMatrix * m_modelMatrix;
@@ -268,6 +269,7 @@ public:
       vertex.x = vertex.x / vertex.w;
       vertex.y = vertex.y / vertex.w;
       vertex.z = vertex.z / vertex.w;
+      vertex.w = 1.0f / vertex.w;
 
       // Viewport
       vertex.x = (vertex.x + 1.0f) * (m_windowWidth - 1) * 0.5f + 0.0f; // plus X viewport origin
