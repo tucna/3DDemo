@@ -2,7 +2,7 @@
 Small program visually demonstrating some basics of linear algebra.
 
 <p align="center">  
-  <img src="doc/demo_1.png" width=450><img src="doc/demo_2.png" width=450>
+  <img src="doc/2.jpg" width=300><img src="doc/1.jpg" width=300>
 </p>
 
 The project is built on [tPixelGameEngine](https://github.com/tucna/tPixelGameEngine) which is only one dependency used exlusively for pixel drawing.
